@@ -17,10 +17,13 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
 class SnakeGame:
-    def __init__(self):
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption('Snake RL')
-        self.clock = pygame.time.Clock()
+    def __init__(self, render=False):
+        self.render_mode = render
+        if self.render_mode:
+            pygame.init()
+            self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.display.set_caption('Snake RL')
+            self.clock = pygame.time.Clock()
         self.reset()
 
     def reset(self):
@@ -104,7 +107,9 @@ class SnakeGame:
         return np.array(state, dtype=np.float32)
 
     def render(self):
-        self.screen.fill((0, 0, 0))  # Black background
+        if not self.render_mode:
+            return  # Skip rendering if not enabled
+        self.screen.fill((0, 0, 0))
         for segment in self.snake:
             pygame.draw.rect(self.screen, GREEN, (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(self.screen, RED, (self.food[0] * GRID_SIZE, self.food[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))

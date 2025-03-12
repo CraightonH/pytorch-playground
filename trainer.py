@@ -6,10 +6,10 @@ import numpy as np
 import snake
 import nn
 
-def train_snake(load_model=False, metrics_file="metrics/snake_metrics_dqn.csv"):
-    game = snake.SnakeGame()
+def train_snake(load_model=False, render=False, metrics_file="metrics/snake_metrics_dqn.csv"):
+    game = snake.SnakeGame(render=render)
     agent = nn.DQNAgent(state_size=7, action_size=3, load_model=load_model)
-    episodes = 2000
+    episodes = 10000
     max_steps = 500
     batch_size = 32
 
@@ -76,14 +76,15 @@ def train_snake(load_model=False, metrics_file="metrics/snake_metrics_dqn.csv"):
                         csvfile.flush()  # Ensure data is written immediately
                         break
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        agent.save_model()  # Save before quitting
-                        pygame.quit()
-                        return
+                if render:  # Only check events if rendering
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            agent.save_model()
+                            pygame.quit()
+                            return
             # Save model after training completes
             agent.save_model()
-        
+
         except KeyboardInterrupt:
             # Save if interrupted (e.g., Ctrl+C)
             agent.save_model()
@@ -92,4 +93,4 @@ def train_snake(load_model=False, metrics_file="metrics/snake_metrics_dqn.csv"):
             return
 
 if __name__ == "__main__":
-    train_snake(load_model=True)
+    train_snake(load_model=True, render=False)
