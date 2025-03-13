@@ -111,12 +111,18 @@ class SnakeGame:
         food_dy = head_y - food_y 
         tail_dx = tail_x - head_x
         tail_dy = tail_y - head_y
-        
+
         # Wall distances
         wall_left = 1 if head_x <= 2 else 0
         wall_right = 1 if head_x >= GRID_WIDTH - 3 else 0
         wall_up = 1 if head_y <= 2 else 0
         wall_down = 1 if head_y >= GRID_HEIGHT - 3 else 0
+
+        # Body proximity flags
+        body_left = 1 if (head_x - 1, head_y) in self.snake else 0
+        body_right = 1 if (head_x + 1, head_y) in self.snake else 0
+        body_up = 1 if (head_x, head_y - 1) in self.snake else 0
+        body_down = 1 if (head_x, head_y + 1) in self.snake else 0
 
         # print(f"food_dx: {food_dx}, food_dy: {food_dy}, facing_dir: {facing_dir}, head_x: {head_x}, head_y: {head_y}, snake_length: {len(self.snake)}, wall_left: {wall_left}, wall_right: {wall_right}, wall_up: {wall_up}, wall_down: {wall_down}")
 
@@ -133,7 +139,11 @@ class SnakeGame:
             wall_up,
             wall_down,
             tail_dx,
-            tail_dy
+            tail_dy,
+            body_left,
+            body_right,
+            body_up,
+            body_down
         ], dtype=np.float32)
 
     def render(self):

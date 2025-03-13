@@ -9,7 +9,7 @@ import sys
 
 def train_snake(load_model=False, render=False, metrics_file="metrics/snake_metrics_dqn.csv"):
     game = snake.SnakeGame(render=render)
-    agent = nn.DQNAgent(state_size=13, action_size=3, load_model=load_model)
+    agent = nn.DQNAgent(state_size=17, action_size=3, load_model=load_model)
     episodes = 2000
     max_steps = 500
     batch_size = 1024
