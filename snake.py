@@ -1,3 +1,4 @@
+from collections import deque
 import numpy as np
 import random
 import pygame
@@ -9,7 +10,7 @@ pygame.init()
 WIDTH, HEIGHT = 400, 400
 GRID_SIZE = 20
 GRID_WIDTH, GRID_HEIGHT = WIDTH // GRID_SIZE, HEIGHT // GRID_SIZE
-SNAKE_SPEED = 15
+SNAKE_SPEED = 30
 
 # Colors
 WHITE = (255, 255, 255)
@@ -24,6 +25,7 @@ class SnakeGame:
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
             pygame.display.set_caption('Snake RL')
             self.clock = pygame.time.Clock()
+        self.last_positions = deque(maxlen=4)
         self.reset()
 
     def reset(self):
@@ -35,6 +37,10 @@ class SnakeGame:
         self.self_collisions = 0
         self.wall_collisions = 0
         self.final_length = len(self.snake)  # Will update on end
+        self.last_positions.clear()
+        self.last_positions.append(self.snake[0])
+        if self.render_mode:
+            self.render()  # Render initial state
         return self._get_state()
 
     def _place_food(self):
@@ -71,40 +77,64 @@ class SnakeGame:
             new_head[1] < 0 or new_head[1] >= GRID_HEIGHT):
             self.done = True
             self.wall_collisions += 1
-            reward = -10
+            reward = -5
         elif new_head in self.snake:
             self.done = True
             self.self_collisions += 1
-            reward = -20 - 2 * len(self.snake)
+            reward = -5 - len(self.snake)
         else:
             self.snake.insert(0, new_head)
             if new_head == self.food:  # Ate food
                 self.score += 1
                 self.food = self._place_food()
-                reward = 50
+                reward = 25 * min(self.score + 1, 10)
             elif self.approaching_food(head, new_head):
-                reward = 1
+                reward = 2 # incentivize hunting
                 self.snake.pop()  # Remove tail
             else:
                 self.snake.pop()  # Remove tail
-                reward = -1
+                if len(self.last_positions) == 4 and len(set(self.last_positions)) < 3:
+                    reward = -3 # Stuck in a loop
+                else:
+                    reward = -1 # disincentivize wandering
+
         if self.done:
             self.final_length = len(self.snake)
 
         return self._get_state(), reward, self.done
 
     def _get_state(self):
-        head = self.snake[0]
-        state = [
-            head[0] - self.food[0],  # Distance to food x
-            head[1] - self.food[1],  # Distance to food y
-            self.direction[0],       # Current direction x
-            self.direction[1],       # Current direction y
-            head[0],                 # Head x (wall proximity)
-            head[1],                 # Head y (wall proximity)
-            len(self.snake)          # Snake length
-        ]
-        return np.array(state, dtype=np.float32)
+        head_x, head_y = self.snake[0]
+        tail_x, tail_y = self.snake[-1]
+        food_x, food_y = self.food
+        food_dx = head_x - food_x 
+        food_dy = head_y - food_y 
+        tail_dx = tail_x - head_x
+        tail_dy = tail_y - head_y
+        
+        # Wall distances
+        wall_left = 1 if head_x <= 2 else 0
+        wall_right = 1 if head_x >= GRID_WIDTH - 3 else 0
+        wall_up = 1 if head_y <= 2 else 0
+        wall_down = 1 if head_y >= GRID_HEIGHT - 3 else 0
+
+        # print(f"food_dx: {food_dx}, food_dy: {food_dy}, facing_dir: {facing_dir}, head_x: {head_x}, head_y: {head_y}, snake_length: {len(self.snake)}, wall_left: {wall_left}, wall_right: {wall_right}, wall_up: {wall_up}, wall_down: {wall_down}")
+
+        return np.array([
+            food_dx,
+            food_dy,
+            self.direction[0],
+            self.direction[1],
+            head_x,
+            head_y,
+            len(self.snake),
+            wall_left,
+            wall_right,
+            wall_up,
+            wall_down,
+            tail_dx,
+            tail_dy
+        ], dtype=np.float32)
 
     def render(self):
         if not self.render_mode:
@@ -113,5 +143,7 @@ class SnakeGame:
         for segment in self.snake:
             pygame.draw.rect(self.screen, GREEN, (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(self.screen, RED, (self.food[0] * GRID_SIZE, self.food[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+        pygame.event.pump()  # Process events before flip
         pygame.display.flip()
         self.clock.tick(SNAKE_SPEED)
+        pygame.time.wait(10)  # 10ms delay
