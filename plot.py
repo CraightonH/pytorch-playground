@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load the CSV
-data = pd.read_csv("metrics/snake_metrics_dqn_w_walls_tail.csv")
+data = pd.read_csv("metrics/snake_metrics_dqn.csv")
 
 # Create subplots
 plt.figure(figsize=(12, 12))
