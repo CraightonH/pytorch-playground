@@ -77,26 +77,26 @@ class SnakeGame:
             new_head[1] < 0 or new_head[1] >= GRID_HEIGHT):
             self.done = True
             self.wall_collisions += 1
-            reward = -5
+            reward = -10 - (1.2 * len(self.snake))
         elif new_head in self.snake:
             self.done = True
             self.self_collisions += 1
-            reward = -5 #- 1.2 * len(self.snake) # potentially reduce penalty to encourage more growth later
+            reward = -10 - (2 * len(self.snake)) # -10 - len(self.snake)
         else:
             self.snake.insert(0, new_head)
             if new_head == self.food:  # Ate food
                 self.score += 1
                 self.food = self._place_food()
-                reward = 25 * min(self.score + 1, 10)
+                reward = 20 + (1.5 * len(self.snake)) # 20 + (2 * self.score + 1) # REALLY GOOD
             elif self.approaching_food(head, new_head):
                 reward = 1 # incentivize hunting
                 self.snake.pop()  # Remove tail
             else:
                 self.snake.pop()  # Remove tail
                 if len(self.last_positions) == 4 and len(set(self.last_positions)) < 3:
-                    reward = -2 # Stuck in a loop
+                    reward = -5 # Stuck in a loop
                 else:
-                    reward = -1 # disincentivize wandering
+                    reward = -1 + (.1 * min(self.score, 10)) # disincentivize wandering early # REALLY GOOD
 
         if self.done:
             self.final_length = len(self.snake)

@@ -10,7 +10,7 @@ import sys
 def train_snake(load_model=False, render=False, metrics_file="metrics/snake_metrics_dqn.csv"):
     game = snake.SnakeGame(render=render)
     agent = nn.DQNAgent(state_size=13, action_size=3, load_model=load_model)
-    episodes = 20000
+    episodes = 2000
     max_steps = 500
     batch_size = 1024
 
@@ -63,7 +63,7 @@ def train_snake(load_model=False, render=False, metrics_file="metrics/snake_metr
                 avg_reward_100 = np.mean(rewards) if len(rewards) > 0 else 0                  
                 print(f"Episode: {e+1}/{episodes}, "
                         f"Score: {game.score}, "
-                        f"Reward: {total_reward}, "
+                        f"Reward: {total_reward:.2f}, "
                         f"Epsilon: {agent.epsilon:.2f}, "
                         f"Avg Score (50): {avg_score_50:.2f}, "
                         f"Avg Score (100): {avg_score_100:.2f}, "
