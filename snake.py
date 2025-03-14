@@ -94,7 +94,7 @@ class SnakeGame:
             else:
                 self.snake.pop()  # Remove tail
                 if len(self.last_positions) == 4 and len(set(self.last_positions)) < 3:
-                    reward = -5 # Stuck in a loop
+                    reward = -5 * len(self.snake) # disincentize looping when snake grows # Stuck in a loop
                 else:
                     reward = -1 + (.1 * min(self.score, 10)) # disincentivize wandering early # REALLY GOOD
 

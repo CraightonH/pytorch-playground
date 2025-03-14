@@ -112,4 +112,4 @@ def train_snake(load_model=False, render=False, metrics_file="metrics/snake_metr
             return
 
 if __name__ == "__main__":
-    train_snake(load_model=True, render=True)
+    train_snake(load_model=False, render=False)
