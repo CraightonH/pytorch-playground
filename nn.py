@@ -49,7 +49,7 @@ class DQNAgent:
 
     def load_model(self, filename="models/snake_dqn.pth", memory_filename="memory/snake_memory.pkl"):
         try:
-            self.model.load_state_dict(torch.load(filename))
+            self.model.load_state_dict(torch.load(filename, map_location=self.device))
             self.model.eval()
             print(f"Model loaded from {filename}")
         except FileNotFoundError:

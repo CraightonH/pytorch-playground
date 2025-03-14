@@ -2,7 +2,7 @@ from collections import deque
 import numpy as np
 import random
 import pygame
-
+import rewards
 # Initialize Pygame
 pygame.init()
 
@@ -61,8 +61,7 @@ class SnakeGame:
         return False
 
     def step(self, action):
-      # Action: 0 = straight, 1 = left, 2 = right
-        reward = 0
+        # Action: 0 = straight, 1 = left, 2 = right
         if action == 1:  # Turn left
             self.direction = (-self.direction[1], self.direction[0])
         elif action == 2:  # Turn right
@@ -72,31 +71,33 @@ class SnakeGame:
         head = self.snake[0]
         new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
 
-        # Check collision with walls or self
-        if (new_head[0] < 0 or new_head[0] >= GRID_WIDTH or
-            new_head[1] < 0 or new_head[1] >= GRID_HEIGHT):
+        # Check conditions
+        wall_collision = (new_head[0] < 0 or new_head[0] >= GRID_WIDTH or
+                         new_head[1] < 0 or new_head[1] >= GRID_HEIGHT)
+        self_collision = new_head in self.snake
+        approaching = self.approaching_food(head, new_head)
+
+        # Calculate reward
+        reward = rewards.calculate_reward(new_head, self.food, self.snake, self.last_positions,
+                                wall_collision, self_collision, approaching)
+
+        # Update game state
+        if wall_collision:
             self.done = True
             self.wall_collisions += 1
-            reward = -10 - (1.2 * len(self.snake))
-        elif new_head in self.snake:
+        elif self_collision:
             self.done = True
             self.self_collisions += 1
-            reward = -10 - (2 * len(self.snake)) # -10 - len(self.snake)
         else:
             self.snake.insert(0, new_head)
-            if new_head == self.food:  # Ate food
+            self.last_positions.append(new_head)
+            if new_head == self.food:
                 self.score += 1
                 self.food = self._place_food()
-                reward = 20 + (1.5 * len(self.snake)) # 20 + (2 * self.score + 1) # REALLY GOOD
-            elif self.approaching_food(head, new_head):
-                reward = 1 # incentivize hunting
+            elif approaching:
                 self.snake.pop()  # Remove tail
             else:
                 self.snake.pop()  # Remove tail
-                if len(self.last_positions) == 4 and len(set(self.last_positions)) < 3:
-                    reward = -5 # Stuck in a loop
-                else:
-                    reward = -1 + (.1 * min(self.score, 10)) # disincentivize wandering early # REALLY GOOD
 
         if self.done:
             self.final_length = len(self.snake)
